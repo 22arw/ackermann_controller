@@ -50,11 +50,11 @@ bool Odometry::update(
 
     for (std::vector<Wheel>::const_iterator it = odometry_joints.begin(); it != odometry_joints.end(); ++it)
     {
-        const double wheel_est_vel = it->handle_.getVelocity() * dt;
-        linear_sum += wheel_est_vel * it->radius_;
+        const double wheel_est_vel = it->handle_.getVelocity() * dt;    //This gets current velocity from joint handle
+        linear_sum += wheel_est_vel * it->radius_;  //This would be the distance because it is rad/s times meter in radius
     }
 
-    const double linear = linear_sum / odometry_joints.size();
+    const double linear = linear_sum / odometry_joints.size();  //Seems to average out all of the odom joints, linear distance
 
     for (std::vector<ActuatedJoint>::const_iterator it = steering_joints.begin(); it != steering_joints.end(); ++it)
     {

@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <string>
 #include <ackermann_controller/ackermann_controller.h>
+//#include <iostream>   //Necessary to perform debugging
 
 using hardware_interface::VelocityJointInterface;
 using hardware_interface::PositionJointInterface;
@@ -17,8 +18,8 @@ using hardware_interface::JointStateInterface;
 
 namespace ackermann_controller {
 
-AckermannController::AckermannController()
-    : open_loop_(false)
+AckermannController::AckermannController()  //This is the default constructor
+    : open_loop_(false) //Might want to run open_loop at startup
     , command_struct_()
     , steering_angle_instead_of_angular_speed_(true)
     , wheelbase_(1.0)
@@ -28,8 +29,7 @@ AckermannController::AckermannController()
     , base_frame_id_("base_link")
     , base_link_("base_link")
     , enable_odom_tf_(true)
-{
-}
+{}
 
 bool AckermannController::init(
     hardware_interface::RobotHW * hw,
@@ -51,7 +51,7 @@ bool AckermannController::init(
 
     try
     {
-        boost::shared_ptr<urdf::ModelInterface> urdf_model = getURDFModel(root_nh);
+        urdf::ModelInterfaceSharedPtr urdf_model = getURDFModel(root_nh);
 
         std::vector<std::string>::const_iterator it;
         std::vector<std::string> spinning_joint_names = getJointNames(controller_nh, "spinning_joints");
@@ -100,6 +100,7 @@ bool AckermannController::init(
 
     sub_command_ = controller_nh.subscribe("cmd_vel", 1, &AckermannController::cmdVelCallback, this);
 
+    state_ = INITIALIZED;   //This was necessary to allow starting of controller
     return true;
 }
 
@@ -197,6 +198,7 @@ void AckermannController::moveRobot(const ros::Time& time, const ros::Duration& 
     }
 }
 
+//Starts the controller, should probably change state
 void AckermannController::starting(const ros::Time& time)
 {
     brake();
@@ -207,11 +209,13 @@ void AckermannController::starting(const ros::Time& time)
     odometry_.init(time);
 }
 
+//Stops the controller, should probably change state
 void AckermannController::stopping(const ros::Time& /*time*/)
 {
     brake();
 }
 
+//Set's all velocity commands to 0
 void AckermannController::brake()
 {
     const double velocity = 0.0;
@@ -301,7 +305,7 @@ bool AckermannController::initParams(ros::NodeHandle& controller_nh)
     return true;
 }
 
-boost::shared_ptr<urdf::ModelInterface> AckermannController::getURDFModel(const ros::NodeHandle& nh)
+urdf::ModelInterfaceSharedPtr AckermannController::getURDFModel(const ros::NodeHandle& nh)
 {
     const std::string model_param_name = "robot_description";
     std::string robot_model_str = "";
@@ -311,7 +315,7 @@ boost::shared_ptr<urdf::ModelInterface> AckermannController::getURDFModel(const 
         throw std::runtime_error("Robot description couldn't be retrieved from param server.");
     }
 
-    boost::shared_ptr<urdf::ModelInterface> model(urdf::parseURDF(robot_model_str));
+    urdf::ModelInterfaceSharedPtr model(urdf::parseURDF(robot_model_str));
 
     return model;
 }

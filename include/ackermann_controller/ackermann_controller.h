@@ -8,7 +8,7 @@
 
 #include <controller_interface/multi_interface_controller.h>
 #include <hardware_interface/joint_command_interface.h>
-#include <pluginlib/class_list_macros.h>
+#include <pluginlib/class_list_macros.h>    //Pluginlib must be included in CMakeLists
 
 #include <nav_msgs/Odometry.h>
 #include <tf/tfMessage.h>
@@ -38,9 +38,10 @@ public:
     * \param controller_nh Node handle inside the controller namespace
     */
     bool init(
-        hardware_interface::RobotHW* hw,
+        hardware_interface::RobotHW * hw,
+        //hardware_interface::RobotHWSharedPtr hw, //This is probably cleaner
         ros::NodeHandle& root_nh,
-        ros::NodeHandle &controller_nh);
+        ros::NodeHandle& controller_nh);
 
     /**
     * \brief Updates controller, i.e. computes the odometry and sets the new velocity commands
@@ -60,6 +61,10 @@ public:
     * \param time Current time
     */
     void stopping(const ros::Time& /*time*/);
+
+    void updateOdometry(const ros::Time& time, const ros::Duration& period);    //Moved from private to call separately
+
+    void moveRobot(const ros::Time& time, const ros::Duration& period); //Moved from private to call separately
 
 private:
 
@@ -112,11 +117,7 @@ private:
 
     bool initParams(ros::NodeHandle& controller_nh);
 
-    void updateOdometry(const ros::Time& time, const ros::Duration& period);
-
-    void moveRobot(const ros::Time& time, const ros::Duration& period);
-
-    boost::shared_ptr<urdf::ModelInterface> getURDFModel(const ros::NodeHandle& nh);
+    urdf::ModelInterfaceSharedPtr getURDFModel(const ros::NodeHandle& nh);
 
     std::vector<std::string> getJointNames(ros::NodeHandle& controller_nh, const std::string& param);
 

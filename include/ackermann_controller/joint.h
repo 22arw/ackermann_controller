@@ -11,6 +11,7 @@
 #include <urdf_model/link.h>
 #include <urdf_model/pose.h>
 #include <stdexcept>
+//#include <iostream>   //Necessary to perform debugging
 
 namespace ackermann_controller {
 
@@ -19,13 +20,13 @@ struct JointBase
     JointBase(
         const std::string& name,
         const std::string& base_link_name,
-        boost::shared_ptr<urdf::ModelInterface> model
+        urdf::ModelInterfaceSharedPtr model
     ):
         name_(name)
     {
         urdf::Vector3 position;
         joint_ = model->getJoint(name_);
-        boost::shared_ptr<const urdf::Joint> joint = joint_;
+        urdf::JointConstSharedPtr joint = joint_;
 
         if (!joint)
         {
@@ -37,16 +38,16 @@ struct JointBase
             urdf::Pose transform = joint->parent_to_joint_origin_transform;
             position = transform.position + transform.rotation * position;
 
-            boost::shared_ptr<const urdf::Link> link = model->getLink(joint->parent_link_name);
+            urdf::LinkConstSharedPtr link = model->getLink(joint->parent_link_name);
             joint = link->parent_joint;
         }
 
-        lateral_deviation_ = position.y;
+        lateral_deviation_ = - position.y;  //Added negative sign on 04/10 because it was reversing joints
     }
 
     std::string name_;
     double lateral_deviation_;
-    boost::shared_ptr<const urdf::Joint> joint_;
+    urdf::JointConstSharedPtr joint_;
     hardware_interface::JointStateHandle handle_;
 };
 
@@ -55,7 +56,7 @@ struct Joint: public JointBase
     Joint(
         const std::string& name,
         const std::string& base_link_name,
-        boost::shared_ptr<urdf::ModelInterface> model,
+        urdf::ModelInterfaceSharedPtr model,
         hardware_interface::JointStateHandle handle
     ):
         JointBase(name, base_link_name, model),
@@ -75,7 +76,7 @@ struct ActuatedJoint: public JointBase
     ActuatedJoint(
         const std::string& name,
         const std::string& base_link_name,
-        boost::shared_ptr<urdf::ModelInterface> model,
+        urdf::ModelInterfaceSharedPtr model,
         hardware_interface::JointHandle handle
     ):
         JointBase(name, base_link_name, model),
@@ -99,9 +100,9 @@ struct WheelBase
 {
     WheelBase(
         const std::string& child_link_name,
-        boost::shared_ptr<urdf::ModelInterface> model)
+        urdf::ModelInterfaceSharedPtr model)
     {
-        boost::shared_ptr<const urdf::Link> link = model->getLink(child_link_name);
+        urdf::LinkConstSharedPtr link = model->getLink(child_link_name);
 
         if (!link)
         {
@@ -134,7 +135,7 @@ struct Wheel: public Joint, public WheelBase
     Wheel(
         const std::string& name,
         const std::string& base_link_name,
-        boost::shared_ptr<urdf::ModelInterface> model,
+        urdf::ModelInterfaceSharedPtr model,
         hardware_interface::JointStateHandle handle
     ):
         Joint(name, base_link_name, model, handle),
@@ -147,7 +148,7 @@ struct ActuatedWheel: public ActuatedJoint, public WheelBase
     ActuatedWheel(
         const std::string& name,
         const std::string& base_link_name,
-        boost::shared_ptr<urdf::ModelInterface> model,
+        urdf::ModelInterfaceSharedPtr model,
         hardware_interface::JointHandle handle
     ):
         ActuatedJoint(name, base_link_name, model, handle),
