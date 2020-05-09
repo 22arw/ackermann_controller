@@ -139,8 +139,10 @@ struct Wheel: public Joint, public WheelBase
         hardware_interface::JointStateHandle handle
     ):
         Joint(name, base_link_name, model, handle),
-        WheelBase(joint_->child_link_name, model)
-    {}
+        WheelBase(joint_->child_link_name, model), last_pos{new double(0)}
+        {}
+
+    double* last_pos;   //This was added to convert to position feedback, pointer was used to keep struct const
 };
 
 struct ActuatedWheel: public ActuatedJoint, public WheelBase

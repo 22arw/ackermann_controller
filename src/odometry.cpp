@@ -50,8 +50,21 @@ bool Odometry::update(
 
     for (std::vector<Wheel>::const_iterator it = odometry_joints.begin(); it != odometry_joints.end(); ++it)
     {
-        const double wheel_est_vel = it->handle_.getVelocity() * dt;    //This gets current velocity from joint handle
-        linear_sum += wheel_est_vel * it->radius_;  //This would be the distance because it is rad/s times meter in radius
+        const double wheel_pos = it->handle_.getPosition();
+
+        //This is the new section which allows for position feedback over time
+        if(wheel_pos != 0)  //Doesn't attempt until it receives a position
+        {
+            if(*(it->last_pos) != 0)   //Copies wheel position on the first pass to avoid odom jumps
+            {
+                linear_sum += (wheel_pos - *(it->last_pos)) * it->radius_;
+            }
+            *(it->last_pos) = wheel_pos;
+        }
+
+        //This was the original section which allowed for velocity feedback using differential slicing
+        //const double wheel_est_vel = it->handle_.getVelocity() * dt;    //This gets current velocity from joint handle
+        //linear_sum += wheel_est_vel * it->radius_;  //This would be the distance because it is rad/s times meter in radius
     }
 
     const double linear = linear_sum / odometry_joints.size();  //Seems to average out all of the odom joints, linear distance
