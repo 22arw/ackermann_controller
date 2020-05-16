@@ -8,6 +8,7 @@
 
 #include <ackermann_controller/odometry.h>
 #include <boost/bind.hpp>
+#include <cstdlib>
 
 namespace ackermann_controller
 {
@@ -59,6 +60,7 @@ bool Odometry::update(
             {
                 linear_sum += (wheel_pos - *(it->last_pos)) * it->radius_;
             }
+            if(std::abs(linear_sum) > 10) {linear_sum = 0;} //This is not a full fix, this only needs to apply for one joint
             *(it->last_pos) = wheel_pos;
         }
 
