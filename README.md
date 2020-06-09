@@ -20,3 +20,9 @@ In order to use this package, you need to instantiate an AckermannController usi
 You need to provide the controller with the necessary config file
 You need to initialize the controller using init and this is where the RobotHW file is passed into the control
 You need to start the controller using the starting function provided in the class
+
+## SPECIAL NOTE REGARDING THE PIG REPOSITORY
+
+Do not use this repository for simulation. This particular setup is specifically for the real pig
+and works to solve issues with RoboTeq using incremental feedback from the propulsion motor.
+In the future it is probably better to lump these changes into a yaml file so the same repository can be used for both
